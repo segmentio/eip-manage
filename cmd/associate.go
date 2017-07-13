@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/segmentio/eip-manage/lib"
 	"github.com/spf13/cobra"
 )
@@ -25,13 +26,23 @@ func init() {
 }
 
 func associate(cmd *cobra.Command, args []string) error {
+	var ip *ec2.Address
+	var err error
+
 	client := lib.NewClient()
 
 	if err := client.SetInstanceId(instanceId); err != nil {
 		return err
 	}
 
-	ip, err := client.GetAvailableIP()
+	if inNetwork != "" {
+		ip, err = client.GetIpInNetwork(inNetwork)
+	} else if outNetwork != "" {
+		ip, err = client.GetIpOutNetwork(inNetwork)
+	} else {
+		ip, err = client.GetAvailableIP()
+	}
+
 	if err != nil {
 		return err
 	}
